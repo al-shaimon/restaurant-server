@@ -104,8 +104,8 @@ async function run() {
     app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
 
-      if (req.decodedEmail !== email) {
-        res.send({ admin: false });
+      if (req.decoded.email !== email) {
+        return res.send({ admin: false });
       }
 
       const query = { email: email };
@@ -133,12 +133,26 @@ async function run() {
       const result = await usersCollection.deleteOne(query);
       res.send(result);
     });
+
     // Menu related apis
+    // menu get menu data get api all users can access
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result);
     });
-
+    // menu adding new items post api only admin can access
+    app.post('/menu', verifyJWT, verifyAdmin, async (req, res) => {
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
+      res.send(result);
+    });
+    // menu delete items delete api only admin can access
+    app.delete('/menu/:id', verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.deleteOne(query);
+      res.send(result);
+    });
     // Review related apis
     app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray();
@@ -149,7 +163,7 @@ async function run() {
     app.get('/carts', verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
-        res.send([]);
+        return res.send([]);
       }
 
       const decodedEmail = req.decoded.email;
