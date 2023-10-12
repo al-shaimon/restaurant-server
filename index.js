@@ -51,6 +51,7 @@ async function run() {
     const menuCollection = client.db('bistroDb').collection('menu');
     const reviewCollection = client.db('bistroDb').collection('reviews');
     const cartCollection = client.db('bistroDb').collection('carts');
+    const contactCollection = client.db('bistroDb').collection('contacts');
     const paymentCollection = client.db('bistroDb').collection('payments');
 
     // jwt implementation
@@ -189,6 +190,35 @@ async function run() {
       res.send(result);
     });
 
+    // contact us apis
+    app.get('/contact', async (req, res) => {
+      const result = await contactCollection.find().toArray();
+      res.send(result);
+    });
+    app.post('/contact', async (req, res) => {
+      const newMessage = req.body;
+      const result = await contactCollection.insertOne(newMessage);
+      res.send(newMessage);
+    });
+    app.delete('/contact/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await contactCollection.deleteOne(query);
+      res.send(result);
+    });
+    app.patch('/contact/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: 'read',
+        },
+      };
+
+      const result = await contactCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // create payment intent
     app.post('/create-payment-intent', verifyJWT, async (req, res) => {
       const { price } = req.body;
@@ -236,7 +266,7 @@ async function run() {
 
       // this is not best way to get sum of the price field
       const payments = await paymentCollection.find().toArray();
-      const revenue = payments.reduce((sum, payment) => sum + payment.price, 0);
+      const revenue = payments.reduce((sum, payment) => sum + payment.price, 0).toFixed(2);
 
       res.send({
         users,
