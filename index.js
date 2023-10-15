@@ -191,22 +191,22 @@ async function run() {
     });
 
     // contact us apis
-    app.get('/contact', async (req, res) => {
+    app.get('/contact', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await contactCollection.find().toArray();
       res.send(result);
     });
-    app.post('/contact', async (req, res) => {
+    app.post('/contact', verifyJWT, async (req, res) => {
       const newMessage = req.body;
       const result = await contactCollection.insertOne(newMessage);
       res.send(newMessage);
     });
-    app.delete('/contact/:id', async (req, res) => {
+    app.delete('/contact/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await contactCollection.deleteOne(query);
       res.send(result);
     });
-    app.patch('/contact/:id', async (req, res) => {
+    app.patch('/contact/:id', verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
